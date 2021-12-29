@@ -1,20 +1,6 @@
 @RestResource(urlMapping='/Contract/*')
 global with sharing class ContractManager {
-    
-    /**
- 	@description This method gets the contract by id
-	@return result
- 	*/
-    @HttpGet
-    global static Contract getContractById() {
-        RestRequest request = RestContext.request;
-        // grab the caseId from the end of the URL
-        String contractId = request.requestURI.substring(
-            request.requestURI.lastIndexOf('/')+1);
-        Contract result =  [SELECT Id, accountId, status, startDate FROM Contract WHERE Id = :contractId];
-        return result;
-    }
-    
+
     /**
  	@description This method modifies the fields of a contract
 	@return The id of the contract
