@@ -1,51 +1,55 @@
 @IsTest
 private class ContractManagerTest {
     
+    @testSetup
+    static void createTestRecord() {
+        Account acc1 = new Account(Name = 'TestAccount');
+        insert acc1;
+        // Create test record
+        Contract contractTest = new Contract(Status='Draft', AccountID= acc1.id);
+        insert contractTest;
+    }     
+    
+    /**
+ 	@description This method tests the createContract method of ContractManager
+ 	*/
     @isTest static void testCreateContract() {
      	RestRequest request = new RestRequest();
         request.requestUri =
             'https://yourInstance.my.salesforce.com/services/apexrest/Contracts/';
         request.httpMethod = 'POST';
         request.addHeader('Content-Type', 'application/json');
-        request.requestBody = Blob.valueOf('{"status": "Draft", "accountId": "0017Q000003wAEmQAM" }');
+        Contract testContract = [SELECT Id, Status, AccountID, StartDate FROM Contract LIMIT 1];
+        request.requestBody = Blob.valueOf('{"status": "Draft", "accountId":"'+ testContract.AccountID +'","startDate":"2021-10-12" }');
         RestContext.request = request;
+        Test.startTest();
         Contract thisContract = ContractManager.createContract();
+        Test.stopTest();
         // Verify results
         System.assert(thisContract != null);
         System.assertEquals(thisContract.Status, 'Draft');
     }
     
-    
-    @isTest static void testUpdateContract() {
-        Contract testContract = createTestRecord();
+    /**
+ 	@description This method tests the updateContractFields method of ContractManager
+ 	*/
+    @isTest static void testUpdateContractFields() {
+        Contract testContract = [SELECT Id, Status, AccountID, StartDate FROM Contract LIMIT 1];
      	RestRequest request = new RestRequest();
         request.requestUri =
             'https://yourInstance.my.salesforce.com/services/apexrest/Contracts/' + testContract.id;
         request.httpMethod = 'PATCH';
         request.addHeader('Content-Type', 'application/json');
-        date newDate = date.newInstance(2022, 11, 16);
-        request.requestBody = Blob.valueOf('{"AccountId" : "0017Q000003wAEmQAM" }');
+        request.requestBody = Blob.valueOf('{"AccountId":"'+ testContract.AccountId+'","startDate":"2021-10-12"}');
         RestContext.request = request;
+        Test.startTest();
         Id thisContractId = ContractManager.updateContractFields();
+        Test.stopTest();
         // Verify results
         System.assert(thisContractId != null);
         Contract thisContract = [SELECT Id, Status, AccountID FROM Contract WHERE Id=:thisContractId];
-        System.assert(thisContract.accountid != testContract.accountid);
+        System.assertEquals(thisContract.accountid, testContract.accountid);
  		System.assertEquals(thisContract.id, testContract.id);
         System.assertEquals(thisContract.status, 'Draft');
     }
-   
-    // Helper method
-    static Contract createTestRecord() {
-        Account acc1 = new Account(Name = 'TestAccount');
-        insert acc1;
-        // Create test record
-        Contract contractTest = new Contract(
-            Status='Draft',
-            AccountID= acc1.id,
-            StartDate = Date.today()
-            );
-        insert contractTest;
-        return contractTest;
-    }          
 }
